@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'djoser',
     'users.apps.UsersConfig',
+    'recipes.apps.RecipesConfig',
     'api.apps.ApiConfig',
 ]
 
@@ -126,7 +127,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
@@ -151,4 +155,8 @@ DJOSER = {
         'user_list': ['rest_framework.permissions.AllowAny'],
     },
     'HIDE_USERS': False,
+    'SERIALIZERS': {
+        'user': 'api.serializers.CustomUserSerializer',
+        'current_user': 'api.serializers.CustomUserSerializer',
+    },
 }
