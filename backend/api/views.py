@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -10,17 +10,20 @@ from api.serializers import (
     TagSerializer,
     IngredientSerializer,
     FavoriteRecipeSerializer,
+    RecipeGetSerializer,
 )
 
 
 class TagViewset(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    permission_classes = (permissions.AllowAny,)
 
 
 class IngredientViewset(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    permission_classes = (permissions.AllowAny,)
 
 
 class FavoriteView(APIView):
@@ -46,6 +49,11 @@ class FavoriteView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
+
+class RecipeViewset(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeGetSerializer
+    permission_classes = (permissions.AllowAny,)
 
 
 class APIFollow(APIView):

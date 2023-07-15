@@ -56,6 +56,9 @@ class Ingredient(models.Model):
             ),
         ]
 
+    def __str__(self):
+        return self.name
+
 
 class Recipe(models.Model):
     """Модель рецепта."""
@@ -75,6 +78,7 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
         through='RecipeIngredient',
+        through_fields=('recipe', 'ingredient'),
         verbose_name='Ингредиенты',
         related_name='ingredients',
     )

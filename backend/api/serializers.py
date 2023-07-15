@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from djoser.serializers import UserSerializer
 
-from recipes.models import Tag, Ingredient, Recipe
+from recipes.models import Tag, Ingredient, Recipe, RecipeIngredient
 from users.models import User, Subscription
 
 
@@ -35,19 +35,16 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
         return obj.image.url
 
 
+class RecipeIngredientSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit',
+    )
 
-# class RecipeGetSerializer(serializers.ModelSerializer):
-#     ingredients = 
-
-#     class Meta:
-#         model = Recipe
-#         fields = ('id', 'tags', 'auhtor', 'ingredients', 'name',)
-#         read_only = 
-
-#     def
-
-
-
+    class Meta:
+        model = RecipeIngredient
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class CustomUserSerializer(UserSerializer):
@@ -71,8 +68,36 @@ class CustomUserSerializer(UserSerializer):
         if request.user.is_anonymous:
             return False
         return Subscription.objects.filter(
-            user=request.user, author=obj,
+            user=request.user,
+            author=obj,
         ).exists()
+
+
+class RecipeGetSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True, read_only=True)
+    author = CustomUserSerializer(read_only=True)
+    ingredients = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'tags',
+            'author',
+            'ingredients',
+            'name',
+            'image',
+            'text',
+            'cooking_time',
+        )
+
+    def get_image(self, obj):
+        return obj.image.url
+
+    def get_ingredients(self, obj):
+        ingredients = RecipeIngredient.objects.filter(recipe=obj)
+        return RecipeIngredientSerializer(ingredients, many=True).data
 
 
 class SubsriptionSerializer(serializers.ModelSerializer):

@@ -9,6 +9,9 @@ from recipes.models import Ingredient
 
 
 class Command(BaseCommand):
+    """Management-команда для импорта данных ингредиентов
+    из файла CSV в БД Django-проекта."""
+
     def handle(self, *args, **options):
         with io.open(
             os.path.join(settings.BASE_DIR.parent / 'data/ingredients.csv'),
