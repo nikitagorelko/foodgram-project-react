@@ -2,7 +2,52 @@ from rest_framework import serializers
 
 from djoser.serializers import UserSerializer
 
+from recipes.models import Tag, Ingredient, Recipe
 from users.models import User, Subscription
+
+
+class TagSerializer(serializers.ModelSerializer):
+    """Сериализатор модели тега."""
+
+    class Meta:
+        model = Tag
+        fields = ('id', 'name', 'color', 'slug')
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    """Сериализатор модели ингредиента."""
+
+    class Meta:
+        model = Ingredient
+        fields = ('name', 'measurement_unit')
+
+
+class FavoriteRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор модели рецепта для добавления в избранное."""
+
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+    def get_image(self, obj):
+        return obj.image.url
+
+
+
+# class RecipeGetSerializer(serializers.ModelSerializer):
+#     ingredients = 
+
+#     class Meta:
+#         model = Recipe
+#         fields = ('id', 'tags', 'auhtor', 'ingredients', 'name',)
+#         read_only = 
+
+#     def
+
+
+
 
 
 class CustomUserSerializer(UserSerializer):
@@ -18,7 +63,7 @@ class CustomUserSerializer(UserSerializer):
             'username',
             'first_name',
             'last_name',
-            'is_subscribed'
+            'is_subscribed',
         )
 
     def get_is_subscribed(self, obj):
@@ -26,7 +71,7 @@ class CustomUserSerializer(UserSerializer):
         if request.user.is_anonymous:
             return False
         return Subscription.objects.filter(
-            user=request.user, author=obj
+            user=request.user, author=obj,
         ).exists()
 
 

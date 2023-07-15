@@ -91,7 +91,7 @@ class Recipe(models.Model):
     )
     cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления',
-        validators=(MinValueValidator(1)),
+        validators=[MinValueValidator(1)],
         error_messages={
             'validators': 'Время приготовления не может быть менее минуты!',
         },
@@ -178,5 +178,30 @@ class Favorite(models.Model):
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
                 name='unique_favorite',
+            ),
+        ]
+
+
+class ShoppingCart(models.Model):
+    """Модель корзины."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+        related_name='shopping_cart',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт',
+        related_name='shopping_cart',
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='user_shoppingcart_unique',
             ),
         ]
