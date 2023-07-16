@@ -22,8 +22,8 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ('name', 'measurement_unit')
 
 
-class FavoriteSubscribeRecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор модели рецепта для добавления в избранное и подписок."""
+class FavoriteCartRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор модели рецепта для добавления в избранное и корзину."""
 
     image = serializers.SerializerMethodField(read_only=True)
 
@@ -137,15 +137,3 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_ingredients(self, obj):
         ingredients = RecipeIngredient.objects.filter(recipe=obj)
         return RecipeIngredientSerializer(ingredients, many=True).data
-
-
-class SubsriptionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Subscription
-        fields = ('user', 'author')
-        validators = [
-            serializers.UniqueTogetherValidator(
-                queryset=Subscription.objects.all(),
-                fields=('user', 'auhtor'),
-            ),
-        ]

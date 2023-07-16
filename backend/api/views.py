@@ -9,7 +9,7 @@ from recipes.models import Tag, Ingredient, Recipe, Favorite
 from api.serializers import (
     TagSerializer,
     IngredientSerializer,
-    FavoriteSubscribeRecipeSerializer,
+    FavoriteCartRecipeSerializer,
     RecipeGetSerializer,
     RecipeSerializer,
 )
@@ -30,7 +30,7 @@ class IngredientViewset(viewsets.ReadOnlyModelViewSet):
 class FavoriteView(APIView):
     def post(self, request, id):
         recipe = get_object_or_404(Recipe, id=id)
-        serializer = FavoriteSubscribeRecipeSerializer(recipe, request.data)
+        serializer = FavoriteCartRecipeSerializer(recipe, request.data)
         if serializer.is_valid():
             if not Favorite.objects.filter(
                 user=request.user,
@@ -51,6 +51,9 @@ class FavoriteView(APIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+
+
+
 class RecipeViewset(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeGetSerializer
@@ -65,6 +68,8 @@ class RecipeViewset(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context.update({'request': self.request})
         return context
+
+
 
 
 class APIFollow(APIView):

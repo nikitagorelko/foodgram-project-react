@@ -187,7 +187,7 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
-    """Модель корзины."""
+    """Модель рецепта в корзине."""
 
     user = models.ForeignKey(
         User,
@@ -206,6 +206,6 @@ class ShoppingCart(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name='user_shoppingcart_unique',
+                name='user_recipe_shoppingcart_unique',
             ),
         ]
