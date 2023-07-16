@@ -1,5 +1,5 @@
-from django.shortcuts import render
 from django.shortcuts import get_object_or_404
+
 from rest_framework.views import APIView
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
@@ -9,8 +9,9 @@ from recipes.models import Tag, Ingredient, Recipe, Favorite
 from api.serializers import (
     TagSerializer,
     IngredientSerializer,
-    FavoriteRecipeSerializer,
+    FavoriteSubscribeRecipeSerializer,
     RecipeGetSerializer,
+    RecipeSerializer,
 )
 
 
@@ -29,7 +30,7 @@ class IngredientViewset(viewsets.ReadOnlyModelViewSet):
 class FavoriteView(APIView):
     def post(self, request, id):
         recipe = get_object_or_404(Recipe, id=id)
-        serializer = FavoriteRecipeSerializer(data=recipe)
+        serializer = FavoriteSubscribeRecipeSerializer(recipe, request.data)
         if serializer.is_valid():
             if not Favorite.objects.filter(
                 user=request.user,
@@ -54,6 +55,16 @@ class RecipeViewset(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeGetSerializer
     permission_classes = (permissions.AllowAny,)
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return RecipeGetSerializer
+        return RecipeSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({'request': self.request})
+        return context
 
 
 class APIFollow(APIView):
