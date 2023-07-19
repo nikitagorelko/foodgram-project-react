@@ -8,6 +8,7 @@ from api.views import (
     RecipeViewset,
     FavoriteView,
     ShoppingCartView,
+    SubscribeView,
     download_shopping_cart,
 )
 
@@ -20,6 +21,11 @@ router.register('ingredients', IngredientViewset, basename='ingredients')
 router.register('recipes', RecipeViewset, basename='recipes')
 
 urlpatterns = [
+    path(
+        'users/<int:id>/subscribe/',
+        SubscribeView.as_view(),
+        name='subscribe',
+    ),
     path(
         'recipes/<int:id>/favorite/',
         FavoriteView.as_view(),

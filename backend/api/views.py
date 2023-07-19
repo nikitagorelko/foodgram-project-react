@@ -22,12 +22,15 @@ from recipes.models import (
     ShoppingCart,
     RecipeIngredient,
 )
+from users.models import Subscription
+
 from api.serializers import (
     TagSerializer,
     IngredientSerializer,
-    FavoriteCartRecipeSerializer,
+    FavoriteCartSubscribeRecipeSerializer,
     RecipeGetSerializer,
     RecipeSerializer,
+    SubscriptionsSerializer,
 )
 
 
@@ -69,6 +72,7 @@ class TagViewset(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (permissions.AllowAny,)
+    pagination_class = None
 
 
 class IngredientViewset(viewsets.ReadOnlyModelViewSet):
@@ -77,13 +81,19 @@ class IngredientViewset(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (permissions.AllowAny,)
+    pagination_class = None
 
 
 class FavoriteView(APIView):
     """Вью-класс для работы с избранными рецептами."""
 
     def post(self, request, id):
-        return RecipePostView(request, id, FavoriteCartRecipeSerializer, Favorite)
+        return RecipePostView(
+            request,
+            id,
+            FavoriteCartSubscribeRecipeSerializer,
+            Favorite,
+        )
 
     def delete(self, request, id):
         return RecipeDeleteView(request, id, Favorite)
@@ -93,7 +103,12 @@ class ShoppingCartView(APIView):
     """Вью-класс для работы с корзиной рецептов."""
 
     def post(self, request, id):
-        return RecipePostView(request, id, FavoriteCartRecipeSerializer, ShoppingCart)
+        return RecipePostView(
+            request,
+            id,
+            FavoriteCartSubscribeRecipeSerializer,
+            ShoppingCart,
+        )
 
     def delete(self, request, id):
         return RecipeDeleteView(request, id, ShoppingCart)
@@ -115,6 +130,36 @@ class RecipeViewset(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context.update({'request': self.request})
         return context
+
+
+class SubscribeView(APIView):
+    """Вью-класс для подписки/отписки."""
+
+    def post(self, request, id):
+        author = get_object_or_404(User, id=id)
+        serializer = SubscriptionsSerializer(
+            author,
+            request.data,
+            context={'request': request},
+        )
+        if serializer.is_valid():
+            if not Subscription.objects.filter(
+            user=request.user,
+            author=author,
+            ).exists():
+                Subscription.objects.create(user=request.user, author=author)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        author = get_object_or_404(User, id=id)
+        if Subscription.objects.filter(
+            user=request.user,
+            author=author,
+        ).exists():
+            Subscription.objects.get(user=request.user, author=author).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -142,12 +187,20 @@ def download_shopping_cart(request):
     pdf_file = canvas.Canvas(pdf_buffer, initialFontName='times')
     y = 800
     for i in recipe_ingredients:
-        pdf_file.drawString(100, y, (
-            f'Ингредиент: {i["ingredient__name"]}, '
-            f'Количество: {i["amount"]}, '
-            f'Единица измерения: {i["ingredient__measurement_unit"]}.'
-        ))
+        pdf_file.drawString(
+            100,
+            y,
+            (
+                f'Ингредиент: {i["ingredient__name"]}, '
+                f'Количество: {i["amount"]}, '
+                f'Единица измерения: {i["ingredient__measurement_unit"]}.'
+            ),
+        )
         y -= 20
     pdf_file.save()
     pdf_buffer.seek(0)
-    return FileResponse(pdf_buffer, as_attachment=True, filename='shopping_cart.pdf')
+    return FileResponse(
+        pdf_buffer,
+        as_attachment=True,
+        filename='shopping_cart.pdf',
+    )
