@@ -187,19 +187,18 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
-    """Модель рецепта в корзине."""
+    """Модель рецепта в списке покупок пользователя."""
 
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name='Пользователь',
-        related_name='shopping_cart',
+        related_name='recipe_in_cart',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт',
-        related_name='shopping_cart',
     )
 
     class Meta:

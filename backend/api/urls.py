@@ -7,6 +7,8 @@ from api.views import (
     IngredientViewset,
     RecipeViewset,
     FavoriteView,
+    ShoppingCartView,
+    download_shopping_cart,
 )
 
 app_name = 'api'
@@ -22,6 +24,16 @@ urlpatterns = [
         'recipes/<int:id>/favorite/',
         FavoriteView.as_view(),
         name='favorite',
+    ),
+    path(
+        'recipes/<int:id>/shopping_cart/',
+        ShoppingCartView.as_view(),
+        name='shopping_cart',
+    ),
+    path(
+        'recipes/download_shopping_cart/',
+        download_shopping_cart,
+        name='download_shopping_cart',
     ),
     path('', include(router.urls)),
     path('auth/', include('djoser.urls.authtoken')),
