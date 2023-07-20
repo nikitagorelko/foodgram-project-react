@@ -9,6 +9,7 @@ from api.views import (
     FavoriteView,
     ShoppingCartView,
     SubscribeView,
+    ShowSubscriptionsView,
     download_shopping_cart,
 )
 
@@ -24,6 +25,11 @@ urlpatterns = [
     path(
         'users/<int:id>/subscribe/',
         SubscribeView.as_view(),
+        name='subscribe',
+    ),
+    path(
+        'users/subscriptions/',
+        ShowSubscriptionsView.as_view(),
         name='subscribe',
     ),
     path(

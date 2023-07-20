@@ -3,13 +3,14 @@ import io
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
+from django.http import FileResponse
 
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view
-from django.http import FileResponse
+from rest_framework.decorators import api_view, permission_classes
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase.pdfmetrics import registerFont
@@ -32,7 +33,7 @@ from api.serializers import (
     RecipeSerializer,
     SubscriptionsSerializer,
 )
-
+from api.permissions import IsAuthorOrReadOnly
 
 registerFont(TTFont('times', 'times.ttf'))
 
@@ -119,17 +120,23 @@ class RecipeViewset(viewsets.ModelViewSet):
 
     queryset = Recipe.objects.all()
     serializer_class = RecipeGetSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (IsAuthorOrReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return RecipeGetSerializer
         return RecipeSerializer
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context.update({'request': self.request})
-        return context
+    def list(self, request, *args, **kwargs):
+        queryset = Recipe.objects.filter(
+            recipe_in_cart__user=request.user
+        ).filter(recipe_in_favorite__user=request.user)
+        serializer = RecipeGetSerializer(
+            queryset,
+            many=True,
+            context={'request': request},
+        )
+        return Response(serializer.data)
 
 
 class SubscribeView(APIView):
@@ -165,7 +172,22 @@ class SubscribeView(APIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+class ShowSubscriptionsView(ListAPIView):
+    """Вью-класс для отображения подписок."""
+
+    def get(self, request):
+        user = request.user
+        queryset = User.objects.filter(following__user=user)
+        serializer = SubscriptionsSerializer(
+            queryset,
+            many=True,
+            context={'request': request},
+        )
+        return Response(serializer.data)
+
+
 @api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
 def download_shopping_cart(request):
     """Вью-функция для списка покупок."""
 

@@ -80,7 +80,7 @@ class Recipe(models.Model):
         through='RecipeIngredient',
         through_fields=('recipe', 'ingredient'),
         verbose_name='Ингредиенты',
-        related_name='ingredients',
+        related_name='recipes',
     )
     name = models.CharField(
         max_length=200,
@@ -175,6 +175,7 @@ class Favorite(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Избранный рецепт',
+        related_name='recipe_in_favorite',
     )
 
     class Meta:
