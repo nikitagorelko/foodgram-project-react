@@ -144,11 +144,14 @@ class SubscribeView(APIView):
         )
         if serializer.is_valid():
             if not Subscription.objects.filter(
-            user=request.user,
-            author=author,
+                user=request.user,
+                author=author,
             ).exists():
                 Subscription.objects.create(user=request.user, author=author)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_201_CREATED,
+                )
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id):

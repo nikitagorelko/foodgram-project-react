@@ -31,6 +31,13 @@ class CustomUserSerializer(UserSerializer):
             'last_name',
             'is_subscribed',
         )
+        read_only_fields = (
+            'id',
+            'email',
+            'username',
+            'first_name',
+            'last_name',
+        )
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
@@ -57,17 +64,18 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit')
+        read_only_fields = ('id', 'name', 'measurement_unit')
 
 
 class FavoriteCartSubscribeRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор рецепта для добавления в избранное и корзину и подписки."""
 
-    image = serializers.SerializerMethodField(read_only=True)
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
-        read_only_fields = ('name', 'cooking_time')
+        read_only_fields = ('id', 'name', 'image', 'cooking_time')
 
     def get_image(self, obj):
         return obj.image.url
@@ -85,13 +93,14 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
+        read_only_fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
     """Сериализатор отображения рецепта."""
 
-    tags = TagSerializer(many=True, read_only=True)
-    author = CustomUserSerializer(read_only=True)
+    tags = TagSerializer(many=True)
+    author = CustomUserSerializer()
     ingredients = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -108,6 +117,14 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart',
             'name',
             'image',
+            'text',
+            'cooking_time',
+        )
+        read_only_fields = (
+            'id',
+            'tags',
+            'author',
+            'name',
             'text',
             'cooking_time',
         )
@@ -188,7 +205,13 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
             'recipes',
             'recipes_count',
         ]
-        read_only_fields = ('email', 'username', 'first_name', 'last_name')
+        read_only_fields = (
+            'id',
+            'email',
+            'username',
+            'first_name',
+            'last_name',
+        )
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
