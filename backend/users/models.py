@@ -61,3 +61,6 @@ class Subscription(models.Model):
                 name='unique_follow',
             ),
         ]
+
+    def __str__(self):
+        return f'{self.user} - {self.author}'

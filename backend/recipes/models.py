@@ -132,6 +132,9 @@ class RecipeTag(models.Model):
             ),
         ]
 
+    def __str__(self):
+        return f'{self.recipe} - {self.tag}'
+
 
 class RecipeIngredient(models.Model):
     """Модель связи ингредиента и рецепта."""
@@ -162,6 +165,9 @@ class RecipeIngredient(models.Model):
             ),
         ]
 
+    def __str__(self):
+        return f'{self.recipe} - {self.ingredient}'
+
 
 class Favorite(models.Model):
     """Модель избранных рецептов."""
@@ -179,12 +185,17 @@ class Favorite(models.Model):
     )
 
     class Meta:
+        verbose_name = 'Избранный рецепт'
+        verbose_name_plural = 'Избранные рецепты'
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
                 name='unique_favorite',
             ),
         ]
+
+    def __str__(self):
+        return f'{self.user} - {self.recipe}'
 
 
 class ShoppingCart(models.Model):
@@ -203,6 +214,8 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
+        verbose_name = 'Рецепт в списке покупок'
+        verbose_name_plural = 'Рецепты в списке покупок'
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
