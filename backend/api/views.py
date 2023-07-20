@@ -1,39 +1,36 @@
 import io
 
-from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
-
-from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
-from rest_framework import viewsets, permissions
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from reportlab.pdfgen import canvas
-from reportlab.pdfbase.ttfonts import TTFont
+from django.shortcuts import get_object_or_404
 from reportlab.pdfbase.pdfmetrics import registerFont
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.generics import ListAPIView
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from recipes.models import (
-    Tag,
-    Ingredient,
-    Recipe,
-    Favorite,
-    ShoppingCart,
-    RecipeIngredient,
-)
-from users.models import Subscription
-
+from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
-    TagSerializer,
-    IngredientSerializer,
     FavoriteCartSubscribeRecipeSerializer,
+    IngredientSerializer,
     RecipeGetSerializer,
     RecipeSerializer,
     SubscriptionsSerializer,
+    TagSerializer,
 )
-from api.permissions import IsAuthorOrReadOnly
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag,
+)
+from users.models import Subscription
 
 registerFont(TTFont('times', 'times.ttf'))
 
