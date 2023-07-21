@@ -4,15 +4,18 @@ from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from reportlab.pdfbase.pdfmetrics import registerFont
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework import permissions, status, viewsets
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.filters import RecipeFilter
+from api.pagination import CustomPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     FavoriteCartSubscribeRecipeSerializer,
@@ -37,7 +40,7 @@ registerFont(TTFont('times', 'times.ttf'))
 User = get_user_model()
 
 
-def RecipePostView(request, id, serializer, model):
+def recipe_post_view(request, id, serializer, model):
     recipe = get_object_or_404(Recipe, id=id)
     serializer = serializer(recipe, request.data)
     if serializer.is_valid():
@@ -53,7 +56,7 @@ def RecipePostView(request, id, serializer, model):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def RecipeDeleteView(request, id, model):
+def recipe_delete_view(request, id, model):
     recipe = get_object_or_404(Recipe, id=id)
     if model.objects.filter(
         user=request.user,
@@ -80,13 +83,17 @@ class IngredientViewset(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = (permissions.AllowAny,)
     pagination_class = None
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name',)
 
 
 class FavoriteView(APIView):
     """Вью-класс для работы с избранными рецептами."""
 
+    permission_classes = (permissions.IsAuthenticated,)
+
     def post(self, request, id):
-        return RecipePostView(
+        return recipe_post_view(
             request,
             id,
             FavoriteCartSubscribeRecipeSerializer,
@@ -94,14 +101,16 @@ class FavoriteView(APIView):
         )
 
     def delete(self, request, id):
-        return RecipeDeleteView(request, id, Favorite)
+        return recipe_delete_view(request, id, Favorite)
 
 
 class ShoppingCartView(APIView):
     """Вью-класс для работы с корзиной рецептов."""
 
+    permission_classes = (permissions.IsAuthenticated,)
+
     def post(self, request, id):
-        return RecipePostView(
+        return recipe_post_view(
             request,
             id,
             FavoriteCartSubscribeRecipeSerializer,
@@ -109,35 +118,38 @@ class ShoppingCartView(APIView):
         )
 
     def delete(self, request, id):
-        return RecipeDeleteView(request, id, ShoppingCart)
+        return recipe_delete_view(request, id, ShoppingCart)
 
 
 class RecipeViewset(viewsets.ModelViewSet):
     """Вьюсет для работы с рецептами."""
 
-    queryset = Recipe.objects.all()
+    queryset = Recipe.objects.prefetch_related(
+        'tags',
+        'ingredients',
+        'author',
+    ).all()
     serializer_class = RecipeGetSerializer
     permission_classes = (IsAuthorOrReadOnly,)
+    pagination_class = CustomPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return RecipeGetSerializer
         return RecipeSerializer
 
-    def list(self, request, *args, **kwargs):
-        queryset = Recipe.objects.filter(
-            recipe_in_cart__user=request.user
-        ).filter(recipe_in_favorite__user=request.user)
-        serializer = RecipeGetSerializer(
-            queryset,
-            many=True,
-            context={'request': request},
-        )
-        return Response(serializer.data)
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({'request': self.request})
+        return context
 
 
 class SubscribeView(APIView):
     """Вью-класс для подписки/отписки."""
+
+    permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, id):
         author = get_object_or_404(User, id=id)
@@ -147,10 +159,14 @@ class SubscribeView(APIView):
             context={'request': request},
         )
         if serializer.is_valid():
-            if not Subscription.objects.filter(
-                user=request.user,
-                author=author,
-            ).exists():
+            if (
+                not Subscription.objects.select_related('user', 'author')
+                .filter(
+                    user=request.user,
+                    author=author,
+                )
+                .exists()
+            ):
                 Subscription.objects.create(user=request.user, author=author)
                 return Response(
                     serializer.data,
@@ -160,10 +176,14 @@ class SubscribeView(APIView):
 
     def delete(self, request, id):
         author = get_object_or_404(User, id=id)
-        if Subscription.objects.filter(
-            user=request.user,
-            author=author,
-        ).exists():
+        if (
+            Subscription.objects.select_related('user', 'author')
+            .filter(
+                user=request.user,
+                author=author,
+            )
+            .exists()
+        ):
             Subscription.objects.get(user=request.user, author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -171,6 +191,8 @@ class SubscribeView(APIView):
 
 class ShowSubscriptionsView(ListAPIView):
     """Вью-класс для отображения подписок."""
+
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
         user = request.user

@@ -13,6 +13,7 @@ class Command(BaseCommand):
     из файла CSV в БД Django-проекта."""
 
     def handle(self, *args, **options):
+        del args, options
         with io.open(
             os.path.join(settings.BASE_DIR.parent / 'data/ingredients.csv'),
             "r",
