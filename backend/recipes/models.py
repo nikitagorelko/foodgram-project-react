@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 User = get_user_model()
@@ -93,9 +93,9 @@ class Recipe(models.Model):
         upload_to='recipes/',
         verbose_name='Картинка рецепта',
     )
-    cooking_time = models.PositiveIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
-        validators=[MinValueValidator(1)],
+        validators=[MinValueValidator(1), MaxValueValidator(32000)],
         error_messages={
             'validators': 'Время приготовления не может быть менее минуты!',
         },
@@ -129,6 +129,7 @@ class RecipeTag(models.Model):
     )
 
     class Meta:
+        ordering = ['recipe']
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'tag'],
@@ -147,14 +148,15 @@ class RecipeIngredient(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт',
+        related_name='recipe_ingredients',
     )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
         verbose_name='Ингредиент',
     )
-    amount = models.IntegerField(
-        validators=[MinValueValidator(1)],
+    amount = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(32000)],
         error_messages={
             'validators': 'Количество ингредиента не может быть менее 1!',
         },
@@ -162,6 +164,7 @@ class RecipeIngredient(models.Model):
     )
 
     class Meta:
+        ordering = ['recipe']
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],
@@ -180,6 +183,7 @@ class Favorite(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Пользователь',
+        related_name='recipe_in_favorite',
     )
     recipe = models.ForeignKey(
         Recipe,
@@ -189,6 +193,7 @@ class Favorite(models.Model):
     )
 
     class Meta:
+        ordering = ['user']
         verbose_name = 'Избранный рецепт'
         verbose_name_plural = 'Избранные рецепты'
         constraints = [
@@ -209,6 +214,7 @@ class ShoppingCart(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Пользователь',
+        related_name='recipe_in_cart',
     )
     recipe = models.ForeignKey(
         Recipe,
@@ -218,6 +224,7 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
+        ordering = ['user']
         verbose_name = 'Рецепт в списке покупок'
         verbose_name_plural = 'Рецепты в списке покупок'
         constraints = [

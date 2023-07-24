@@ -22,9 +22,11 @@ from api.serializers import (
     IngredientSerializer,
     RecipeGetSerializer,
     RecipeSerializer,
-    SubscriptionsSerializer,
+    ShowSubscriptionsSerializer,
+    SubscriptionSerializer,
     TagSerializer,
 )
+from foodgram.settings import PDF_X, PDF_Y, PDF_Y_INDENT
 from recipes.models import (
     Favorite,
     Ingredient,
@@ -43,26 +45,27 @@ User = get_user_model()
 def recipe_post_view(request, id, serializer, model):
     recipe = get_object_or_404(Recipe, id=id)
     serializer = serializer(recipe, request.data)
-    if serializer.is_valid():
-        if not model.objects.filter(
-            user=request.user,
-            recipe=recipe,
-        ).exists():
-            model.objects.create(user=request.user, recipe=recipe)
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED,
-            )
+    serializer.is_valid(raise_exception=True)
+    if not model.objects.filter(
+        user=request.user,
+        recipe=recipe,
+    ).first():
+        model.objects.create(user=request.user, recipe=recipe)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+        )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def recipe_delete_view(request, id, model):
     recipe = get_object_or_404(Recipe, id=id)
-    if model.objects.filter(
+    obj = model.objects.filter(
         user=request.user,
         recipe=recipe,
-    ).exists():
-        model.objects.get(user=request.user, recipe=recipe).delete()
+    ).first()
+    if obj:
+        obj.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -152,39 +155,27 @@ class SubscribeView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, id):
-        author = get_object_or_404(User, id=id)
-        serializer = SubscriptionsSerializer(
-            author,
-            request.data,
+        data = {'user': request.user.id, 'author': id}
+        serializer = SubscriptionSerializer(
+            data=data,
             context={'request': request},
         )
-        if serializer.is_valid():
-            if (
-                not Subscription.objects.select_related('user', 'author')
-                .filter(
-                    user=request.user,
-                    author=author,
-                )
-                .exists()
-            ):
-                Subscription.objects.create(user=request.user, author=author)
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_201_CREATED,
-                )
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+        )
 
     def delete(self, request, id):
         author = get_object_or_404(User, id=id)
-        if (
+        obj = (
             Subscription.objects.select_related('user', 'author')
-            .filter(
-                user=request.user,
-                author=author,
-            )
-            .exists()
-        ):
-            Subscription.objects.get(user=request.user, author=author).delete()
+            .filter(user=request.user, author=author)
+            .first()
+        )
+        if obj:
+            obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -197,7 +188,7 @@ class ShowSubscriptionsView(ListAPIView):
     def get(self, request):
         user = request.user
         queryset = User.objects.filter(following__user=user)
-        serializer = SubscriptionsSerializer(
+        serializer = ShowSubscriptionsSerializer(
             queryset,
             many=True,
             context={'request': request},
@@ -229,10 +220,10 @@ def download_shopping_cart(request):
         )
     pdf_buffer = io.BytesIO()
     pdf_file = canvas.Canvas(pdf_buffer, initialFontName='times')
-    y = 800
+    y = PDF_Y
     for i in recipe_ingredients:
         pdf_file.drawString(
-            100,
+            PDF_X,
             y,
             (
                 f'Ингредиент: {i["ingredient__name"]}, '
@@ -240,7 +231,7 @@ def download_shopping_cart(request):
                 f'Единица измерения: {i["ingredient__measurement_unit"]}.'
             ),
         )
-        y -= 20
+        y -= PDF_Y_INDENT
     pdf_file.save()
     pdf_buffer.seek(0)
     return FileResponse(

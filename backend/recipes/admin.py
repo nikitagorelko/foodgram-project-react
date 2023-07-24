@@ -11,6 +11,11 @@ from recipes.models import (
 )
 
 
+class IngredientsInLine(admin.TabularInline):
+    model = Recipe.ingredients.through
+    min_num = 1
+
+
 class TagAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'color', 'slug')
     list_editable = ('name', 'color', 'slug')
@@ -27,6 +32,9 @@ class RecipeAdmin(admin.ModelAdmin):
     list_editable = ('name', 'author')
     list_filter = ('author', 'name', 'tags')
     empty_value_display = '-пусто-'
+    inlines = (
+        IngredientsInLine,
+    )
 
     def favorite_count(self, obj):
         return obj.recipe_in_favorite.count()

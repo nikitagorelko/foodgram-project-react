@@ -163,3 +163,7 @@ DJOSER = {
         'current_user': 'api.serializers.CustomUserSerializer',
     },
 }
+
+PDF_Y = 800
+PDF_X = 100
+PDF_Y_INDENT = 20
