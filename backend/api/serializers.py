@@ -81,18 +81,12 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit',
     )
+    amount = serializers.IntegerField(min_value=1, max_value=32000)
 
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
         read_only_fields = ('id', 'name', 'measurement_unit', 'amount')
-
-    def validate_amount(self, value):
-        if not 1 <= value <= 32000:
-            raise serializers.ValidationError(
-                'Проверьте количество ингредиента!',
-            )
-        return value
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
@@ -104,6 +98,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    cooking_time = serializers.IntegerField(min_value=1, max_value=32000)
 
     class Meta:
         model = Recipe
@@ -149,11 +144,6 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             and request.user.recipe_in_cart.filter(recipe=obj).exists()
         )
 
-    def validate_cooking_time(self, value):
-        if not 1 <= value <= 32000:
-            raise serializers.ValidationError('Проверьте время готовки!')
-        return value
-
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор создания рецепта."""
@@ -165,6 +155,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
     ingredients = serializers.SerializerMethodField()
     image = Base64ImageField()
+    cooking_time = serializers.IntegerField(min_value=1, max_value=32000)
 
     class Meta:
         model = Recipe
@@ -184,11 +175,6 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_ingredients(self, obj):
         ingredients = obj.recipe_ingredients.all()
         return RecipeIngredientSerializer(ingredients, many=True).data
-
-    def validate_cooking_time(self, value):
-        if not 1 <= value <= 32000:
-            raise serializers.ValidationError('Проверьте время готовки!')
-        return value
 
 
 class ShowSubscriptionsSerializer(serializers.ModelSerializer):

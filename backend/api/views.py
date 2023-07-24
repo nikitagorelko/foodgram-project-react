@@ -46,10 +46,13 @@ def recipe_post_view(request, id, serializer, model):
     recipe = get_object_or_404(Recipe, id=id)
     serializer = serializer(recipe, request.data)
     serializer.is_valid(raise_exception=True)
-    if not model.objects.filter(
-        user=request.user,
-        recipe=recipe,
-    ).first():
+    if (
+        model.objects.filter(
+            user=request.user,
+            recipe=recipe,
+        ).first()
+        is None
+    ):
         model.objects.create(user=request.user, recipe=recipe)
         return Response(
             serializer.data,
@@ -64,7 +67,7 @@ def recipe_delete_view(request, id, model):
         user=request.user,
         recipe=recipe,
     ).first()
-    if obj:
+    if obj is not None:
         obj.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -174,7 +177,7 @@ class SubscribeView(APIView):
             .filter(user=request.user, author=author)
             .first()
         )
-        if obj:
+        if obj is not None:
             obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)

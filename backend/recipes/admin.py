@@ -32,9 +32,7 @@ class RecipeAdmin(admin.ModelAdmin):
     list_editable = ('name', 'author')
     list_filter = ('author', 'name', 'tags')
     empty_value_display = '-пусто-'
-    inlines = (
-        IngredientsInLine,
-    )
+    inlines = (IngredientsInLine,)
 
     def favorite_count(self, obj):
         return obj.recipe_in_favorite.count()
