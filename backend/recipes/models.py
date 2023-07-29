@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from foodgram.settings import MAX_INT_VALUE, MIN_INT_VALUE
+
 User = get_user_model()
 
 
@@ -95,7 +97,10 @@ class Recipe(models.Model):
     )
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
-        validators=[MinValueValidator(1), MaxValueValidator(32000)],
+        validators=[
+            MinValueValidator(MIN_INT_VALUE),
+            MaxValueValidator(MAX_INT_VALUE),
+        ],
         error_messages={
             'validators': 'Время приготовления не может быть менее минуты!',
         },
@@ -156,7 +161,10 @@ class RecipeIngredient(models.Model):
         verbose_name='Ингредиент',
     )
     amount = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(32000)],
+        validators=[
+            MinValueValidator(MIN_INT_VALUE),
+            MaxValueValidator(MAX_INT_VALUE),
+        ],
         error_messages={
             'validators': 'Количество ингредиента не может быть менее 1!',
         },

@@ -4,6 +4,7 @@ from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
+from foodgram.settings import MAX_INT_VALUE, MIN_INT_VALUE
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from users.models import Subscription
 
@@ -98,7 +99,10 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
-    cooking_time = serializers.IntegerField(min_value=1, max_value=32000)
+    cooking_time = serializers.IntegerField(
+        min_value=MIN_INT_VALUE,
+        max_value=MAX_INT_VALUE,
+    )
 
     class Meta:
         model = Recipe
@@ -155,7 +159,10 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
     ingredients = serializers.SerializerMethodField()
     image = Base64ImageField()
-    cooking_time = serializers.IntegerField(min_value=1, max_value=32000)
+    cooking_time = serializers.IntegerField(
+        min_value=MIN_INT_VALUE,
+        max_value=MAX_INT_VALUE,
+    )
 
     class Meta:
         model = Recipe
