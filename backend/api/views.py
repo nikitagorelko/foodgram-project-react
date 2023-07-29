@@ -222,7 +222,7 @@ def download_shopping_cart(request):
             f'Единица измерения: {i["ingredient__measurement_unit"]};',
         )
     pdf_buffer = io.BytesIO()
-    pdf_file = canvas.Canvas(pdf_buffer, initialFontName='times')
+    pdf_file = canvas.Canvas(pdf_buffer, initialFontName='TNR')
     y = PDF_Y
     for i in recipe_ingredients:
         pdf_file.drawString(
