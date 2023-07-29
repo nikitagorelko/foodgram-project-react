@@ -37,7 +37,7 @@ from recipes.models import (
 )
 from users.models import Subscription
 
-registerFont(TTFont('times', 'times.ttf'))
+registerFont(TTFont('TNR', 'times.ttf'))
 
 User = get_user_model()
 
