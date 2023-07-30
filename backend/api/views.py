@@ -37,7 +37,7 @@ from recipes.models import (
 )
 from users.models import Subscription
 
-registerFont(TTFont('TNR', 'times.ttf'))
+registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
 
 User = get_user_model()
 
@@ -222,7 +222,7 @@ def download_shopping_cart(request):
             f'Единица измерения: {i["ingredient__measurement_unit"]};',
         )
     pdf_buffer = io.BytesIO()
-    pdf_file = canvas.Canvas(pdf_buffer, initialFontName='TNR')
+    pdf_file = canvas.Canvas(pdf_buffer, initialFontName='DejaVuSans')
     y = PDF_Y
     for i in recipe_ingredients:
         pdf_file.drawString(
