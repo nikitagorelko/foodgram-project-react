@@ -98,7 +98,6 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     ingredients = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    image = serializers.SerializerMethodField()
     cooking_time = serializers.IntegerField(
         min_value=MIN_INT_VALUE,
         max_value=MAX_INT_VALUE,
@@ -126,9 +125,6 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             'text',
             'cooking_time',
         )
-
-    def get_image(self, obj):
-        return obj.image.url
 
     def get_ingredients(self, obj):
         ingredients = obj.recipe_ingredients.all()
