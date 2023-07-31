@@ -187,6 +187,7 @@ class ShowSubscriptionsView(ListAPIView):
     """Вью-класс для отображения подписок."""
 
     permission_classes = (permissions.AllowAny,)
+    pagination_class = CustomPagination
 
     def get(self, request):
         user = request.user
