@@ -29,7 +29,7 @@ urlpatterns = [
     path(
         'users/subscriptions/',
         ShowSubscriptionsView.as_view(),
-        name='subscribe',
+        name='subscriptions',
     ),
     path(
         'recipes/<int:id>/favorite/',

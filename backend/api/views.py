@@ -191,12 +191,13 @@ class ShowSubscriptionsView(ListAPIView):
     def get(self, request):
         user = request.user
         queryset = User.objects.filter(following__user=user)
+        page = self.paginate_queryset(queryset)
         serializer = ShowSubscriptionsSerializer(
-            queryset,
+            page,
             many=True,
             context={'request': request},
         )
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
 
 @api_view(['GET'])
