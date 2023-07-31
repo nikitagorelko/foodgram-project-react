@@ -187,16 +187,18 @@ class ShowSubscriptionsView(ListAPIView):
     """Вью-класс для отображения подписок."""
 
     permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = CustomPagination
 
     def get(self, request):
         user = request.user
         queryset = User.objects.filter(following__user=user)
+        page = self.paginate_queryset(queryset)
         serializer = ShowSubscriptionsSerializer(
-            queryset,
+            page,
             many=True,
             context={'request': request},
         )
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
 
 @api_view(['GET'])
