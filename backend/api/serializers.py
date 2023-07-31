@@ -172,9 +172,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             'cooking_time',
         )
 
-    def get_image(self, obj):
-        return obj.image.url
-
     def get_ingredients(self, obj):
         ingredients = obj.recipe_ingredients.all()
         return RecipeIngredientSerializer(ingredients, many=True).data
