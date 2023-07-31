@@ -63,15 +63,10 @@ class IngredientSerializer(serializers.ModelSerializer):
 class FavoriteCartSubscribeRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор рецепта для добавления в избранное и корзину и подписки."""
 
-    image = serializers.SerializerMethodField()
-
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
         read_only_fields = ('id', 'name', 'image', 'cooking_time')
-
-    def get_image(self, obj):
-        return obj.image.url
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
