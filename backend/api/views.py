@@ -186,7 +186,7 @@ class SubscribeView(APIView):
 class ShowSubscriptionsView(ListAPIView):
     """Вью-класс для отображения подписок."""
 
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
 
     def get(self, request):
         user = request.user
