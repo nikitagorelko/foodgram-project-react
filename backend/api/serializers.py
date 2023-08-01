@@ -88,6 +88,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
     """Сериализатор создания ингредиента в рецепте."""
     id = serializers.IntegerField()
+    amount = serializers.IntegerField(min_value=1, max_value=32000)
 
     class Meta:
         model = RecipeIngredient
@@ -178,8 +179,9 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def add_ingredients(self, ingredients, recipe):
         for i in ingredients:
+            ingredient = Ingredient.objects.get(id=i['id'])
             RecipeIngredient.objects.create(
-                ingredient=i, recipe=recipe, amount=i['amount'],
+                ingredient=ingredient, recipe=recipe, amount=i['amount'],
             )
 
     def add_tags(self, tags, recipe):
