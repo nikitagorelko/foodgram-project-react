@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from foodgram.settings import MAX_INT_VALUE, MIN_INT_VALUE
-from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag
 from users.models import Subscription
 
 User = get_user_model()
@@ -148,7 +148,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
     )
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    ingredients = serializers.SerializerMethodField()
+    ingredients = RecipeIngredientSerializer(many=True)
     image = Base64ImageField()
     cooking_time = serializers.IntegerField(
         min_value=MIN_INT_VALUE,
@@ -167,9 +167,49 @@ class RecipeSerializer(serializers.ModelSerializer):
             'cooking_time',
         )
 
-    def get_ingredients(self, obj):
-        ingredients = obj.recipe_ingredients.all()
-        return RecipeIngredientSerializer(ingredients, many=True).data
+    def add_ingredients(self, ingredients, recipe):
+        for i in ingredients:
+            RecipeIngredient.objects.create(
+                ingredient=i,
+                recipe=recipe,
+                amount=i['amount'],
+            )
+
+    def add_tags(self, tags, recipe):
+        for tag in tags:
+            tag = Tag.objects.get(id=tag)
+            RecipeTag.objects.create(recipe=recipe, tag=tag)
+
+    def create(self, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        author = self.context.get('request').user
+        recipe = Recipe.objects.create(author=author, **validated_data)
+        self.add_ingredients(ingredients, recipe)
+        self.add_tags(tags, recipe)
+        return recipe
+
+    def update(self, instance, validated_data):
+        RecipeTag.objects.filter(recipe=instance).delete()
+        RecipeIngredient.objects.filter(recipe=instance).delete()
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        self.add_ingredients(ingredients, instance)
+        self.add_tags(tags, instance)
+        instance.name = validated_data.pop('name')
+        instance.text = validated_data.pop('text')
+        instance.image = validated_data.pop('image')
+        instance.cooking_time = validated_data.pop('cooking_time')
+        instance.save()
+        return instance
+
+    def to_representation(self, instance):
+        return RecipeGetSerializer(
+            instance,
+            context={
+                'request': self.context.get('request'),
+            },
+        ).data
 
 
 class ShowSubscriptionsSerializer(serializers.ModelSerializer):
