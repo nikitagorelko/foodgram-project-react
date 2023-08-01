@@ -1,0 +1,4 @@
+IP: 158.160.2.113;
+name_foodgram: https://foodgramngorel.hopto.org/;
+login: yp13sprint@mail.ru;
+password: yp13sprint;
