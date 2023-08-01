@@ -15,7 +15,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         del args, options
         with io.open(
-            os.path.join(settings.BASE_DIR.parent / 'data/ingredients.csv'),
+            os.path.join(settings.BASE_DIR / 'ingredients.csv'),
             "r",
             encoding="utf-8",
         ) as csv_file:
