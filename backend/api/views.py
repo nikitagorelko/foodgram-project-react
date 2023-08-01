@@ -205,7 +205,6 @@ class ShowSubscriptionsView(ListAPIView):
 def download_shopping_cart(request):
     """Вью-функция для списка покупок."""
 
-    cart = []
     recipe_ingredients = (
         RecipeIngredient.objects.filter(
             recipe__recipe_in_cart__user=request.user,
@@ -216,12 +215,6 @@ def download_shopping_cart(request):
         )
         .annotate(amount=Sum('amount'))
     )
-    for i in recipe_ingredients:
-        cart.append(
-            f'Ingredient: {i["ingredient__name"]}, '
-            f'Количество: {i["amount"]}, '
-            f'Единица измерения: {i["ingredient__measurement_unit"]};',
-        )
     pdf_buffer = io.BytesIO()
     pdf_file = canvas.Canvas(pdf_buffer, initialFontName='DejaVuSans')
     y = PDF_Y
