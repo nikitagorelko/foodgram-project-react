@@ -87,6 +87,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
     """Сериализатор создания ингредиента в рецепте."""
+
     id = serializers.IntegerField()
     amount = serializers.IntegerField(min_value=1, max_value=32000)
 
@@ -157,7 +158,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         many=True,
         queryset=Tag.objects.all(),
     )
-    author = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    author = CustomUserSerializer(read_only=True)
     ingredients = RecipeIngredientCreateSerializer(many=True)
     image = Base64ImageField()
     cooking_time = serializers.IntegerField(
@@ -181,12 +182,13 @@ class RecipeSerializer(serializers.ModelSerializer):
         for i in ingredients:
             ingredient = Ingredient.objects.get(id=i['id'])
             RecipeIngredient.objects.create(
-                ingredient=ingredient, recipe=recipe, amount=i['amount'],
+                ingredient=ingredient,
+                recipe=recipe,
+                amount=i['amount'],
             )
 
     def add_tags(self, tags, recipe):
         for tag in tags:
-            tag = Tag.objects.get(id=tag)
             RecipeTag.objects.create(recipe=recipe, tag=tag)
 
     def create(self, validated_data):
@@ -213,9 +215,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
-        return RecipeGetSerializer(instance, context={
-            'request': self.context.get('request'),
-        }).data
+        return RecipeGetSerializer(
+            instance,
+            context={
+                'request': self.context.get('request'),
+            },
+        ).data
 
 
 class ShowSubscriptionsSerializer(serializers.ModelSerializer):
