@@ -207,10 +207,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         self.add_ingredients(ingredients, instance)
         self.add_tags(tags, instance)
-        instance.name = validated_data.pop('name')
-        instance.text = validated_data.pop('text')
-        instance.image = validated_data.pop('image')
-        instance.cooking_time = validated_data.pop('cooking_time')
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.image = validated_data.get('image', instance.image)
+        instance.cooking_time = validated_data.get(
+            'cooking_time', instance.cooking_time
+        )
         instance.save()
         return instance
 
