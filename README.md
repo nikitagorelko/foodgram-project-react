@@ -52,3 +52,7 @@
 ```sh
 python manage.py runserver
 ```
+IP сервера: 158.160.2.113;
+Ссылка на сайт: https://foodgramngorel.hopto.org/;
+Логин администратора: yp13sprint@mail.ru;
+Пароль администратора: yp13sprint.

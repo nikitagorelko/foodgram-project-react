@@ -77,7 +77,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit',
     )
-    amount = serializers.IntegerField(min_value=1, max_value=32000)
 
     class Meta:
         model = RecipeIngredient
@@ -89,7 +88,10 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
     """Сериализатор создания ингредиента в рецепте."""
 
     id = serializers.IntegerField()
-    amount = serializers.IntegerField(min_value=1, max_value=32000)
+    amount = serializers.IntegerField(
+        min_value=MIN_INT_VALUE,
+        max_value=MAX_INT_VALUE,
+    )
 
     class Meta:
         model = RecipeIngredient
@@ -183,17 +185,21 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def add_ingredients(self, ingredients, recipe):
-        for i in ingredients:
-            ingredient = Ingredient.objects.get(id=i['id'])
-            RecipeIngredient.objects.create(
-                ingredient=ingredient,
-                recipe=recipe,
-                amount=i['amount'],
-            )
+        RecipeIngredient.objects.bulk_create(
+            [
+                RecipeIngredient(
+                    recipe=recipe,
+                    ingredient=Ingredient.objects.get(id=i['id']),
+                    amount=i['amount'],
+                )
+                for i in ingredients
+            ],
+        )
 
     def add_tags(self, tags, recipe):
-        for tag in tags:
-            RecipeTag.objects.create(recipe=recipe, tag=tag)
+        RecipeTag.objects.bulk_create(
+            [RecipeTag(recipe=recipe, tag=tag) for tag in tags],
+        )
 
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
